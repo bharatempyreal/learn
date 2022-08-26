@@ -12,10 +12,8 @@ class ProductController extends Controller
 {
     public function index()
     {
-        // return view('product');
-
+     
         $Category= Category::all();
-        // dd($Category);
         return view('product', ['Category'=> $Category]);
     }
 
@@ -40,7 +38,7 @@ class ProductController extends Controller
 
     public function product_sub(Request $request)
     {
-        // dd($request->all());
+        
         $data = [
             'category_id'=>$request->sel_emp,
             'name'=>$request->name,
@@ -49,12 +47,16 @@ class ProductController extends Controller
         ];
         Product::create($data);
 
+        $insert_id = Product::insertGetId($data);
+        // dd($insert_id);
+
         if($files=$request->file('files')){
             foreach($files as $key => $file){
                 $name=$file->getClientOriginalName();
                 $file->move('image',$name);
                 $filedata= new Product_image();
                 $filedata->name = $name;
+                $filedata->product_id = $insert_id;
                 $filedata->orders = $key + 1;
                 $filedata->save();
             }
@@ -83,6 +85,7 @@ class ProductController extends Controller
     public function product_delete($id)
     {
         $cliente = Product::find($id);
+        Product_image::where('product_id', $id)->delete();
         $cliente->delete();
     }
 
@@ -92,18 +95,42 @@ class ProductController extends Controller
         $editimageData = Product_image::where('product_id', $request->id)->get();
         return response()->json(['product' => $editModeData , 'images' => $editimageData]);
         
-            // return $editModeData;
+            
     }
 
     public function product_edit(Request $request)
     {
-        // dd($request->all());
         $id= $request->id;
         $post= Product::find($id);
-        $post->category_id = $request->sel_emp;
-        $post->name = $request->name;
-        $post->description = $request->description;
-        $post->price = $request->prize;
+        $post->category_id = $request->editsel_emp;
+        $post->name = $request->editname;
+        $post->description = $request->editdescription;
+        $post->price = $request->editprize;
         $post->save();
+        if (request()->hasFile('files') && request('files') != '') {
+
+            $product = Product_image::where('product_id', $id)->get();
+            
+            foreach($product as $pro){
+                if ( file_exists(public_path('public/image')."/".$pro->name) ) {
+                    unlink(public_path('public/image')."/".$pro->name);
+                    
+                }
+            }
+                Product_image::where('product_id', $id)->delete();
+                        if($files=$request->file('files')) {
+                            foreach($files as $key => $file) {
+                                $name = $file->getClientOriginalName();
+                                $file->move('image',$name);
+                                $filedata= new Product_image();
+                                $filedata->product_id = $id;
+                                $filedata->name = $name;
+                                $filedata->orders = $key + 1;
+                                $filedata->save();
+                                
+                            }
+                        }
+        
+        }
     }
 }

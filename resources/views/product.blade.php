@@ -131,11 +131,11 @@
                         <label for="edit-taunt">Image :</label>
                         <input type="file" name="files[]" id="files" placeholder="Choose files" multiple>
                     </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="editmodal-save">Save changes</button>
+                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="editmodal-save">Save changes</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
@@ -225,21 +225,24 @@ $(document).ready(function() {
     });
 
     $(document).on("click", ".product_delete", function() {
+
+
         var action = $(this).data("action");
-        confirm("Are You sure want to delete this Post!");
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
+        if (confirm('Are you sure you want to delete this?')) {
+            $.ajax({
+                type: "DELETE",
+                url: action,
+                success: function(data) {
+                    producttable.ajax.reload();
+                },
+            });
+        }
 
-        $.ajax({
-            type: "DELETE",
-            url: action,
-            success: function(data) {
-                producttable.ajax.reload();
-            },
-        });
     });
 
 
@@ -270,41 +273,24 @@ $(document).ready(function() {
                 $('#editdescription').val(data.product.description);
                 $('#editprize').val(data.product.price);
                 $('#files').val(data.images.name);
-
-               
-
                 $('#edit_product').modal('show');
             }
         });
     });
 
-    $('#editmodal-save').on('click', function(e) {
-        // alert('ff');
+    $('#classFormUpdate').on('submit', function(e) {
+        alert('hello');
         e.preventDefault();
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        var action = $(this).data("action");
-        // console.log(action);
-        var id = $('#id').val();
-        var sel_emp = $('#editsel_emp').val();
-        var name = $('#editname').val();
-        var description = $('#editdescription').val();
-        var prize = $('#editprize').val();
+
+        var postData = new FormData(this);
 
         $.ajax({
             type: "POST",
             url: "{{ route('product_edit') }}",
+            processData: false,
+            contentType: false,
             cache: false,
-            data: {
-                id: id,
-                sel_emp: sel_emp,
-                name: name,
-                description: description,
-                prize: prize,
-            },
+            data: postData,
             success: function(msg) {
                 alert('Category Add Successfully');
                 $('#edit_product').modal('hide');

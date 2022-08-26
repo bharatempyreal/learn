@@ -118,13 +118,13 @@ $(document).ready(function() {
 
     $(document).on("click", ".category_delete", function() {
         var action = $(this).data("action");
-        confirm("Are You sure want to delete this Post!");
+       
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-
+        if (confirm('Are you sure you want to delete this?')) {
         $.ajax({
             type: "DELETE",
             url: action,
@@ -132,6 +132,7 @@ $(document).ready(function() {
                 table.ajax.reload();
             },
         });
+    }
     });
 
     $(document).on("click", ".category_edit", function() {
